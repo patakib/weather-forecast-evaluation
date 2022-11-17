@@ -72,3 +72,6 @@ Use historical data to build a prediction system.
 
 #### Automated remote server deployment
 Automate the remote server setup with an Infrastructure as Code tool (Ansible, Terraform) to build databases in containers, use test data, run automated tests and manually destroy the server.
+
+#### Monitor and visualize server performance and details
+Use Prometheus and Grafana for this task.
