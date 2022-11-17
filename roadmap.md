@@ -56,10 +56,19 @@ The website should contain additional information which is updated weekly:
 - last weeks max hourly difference in temperature between forecast and actual weather data for Freiburg (only compare the next closest - next day - forecast with the actual data)
 - last month's 10 smallest daily difference in temperature forecast and actual weather data
 
+### CLI application
+Build a CLI application to get the forecasts and historical data easily.
+
 ### Dashboard
-Use a BI too(PowerBI, Data Studio or anything else) to visualize some interesting parts of the data.
+Use a BI tool (PowerBI, Data Studio or anything else) to visualize some interesting parts of the data.
 
 ### Bonus:
 #### Data Streaming with Kafka
 Use Kafka Connect to connect to MongoDB and write the daily forecasts into a topic.
 If there is 5 Celsius or more difference two days' average temperature, display an alert on the API.
+
+#### Custom predictions
+Use historical data to build a prediction system.
+
+#### Automated remote server deployment
+Automate the remote server setup with an Infrastructure as Code tool (Ansible, Terraform) to build databases in containers, use test data, run automated tests and manually destroy the server.
