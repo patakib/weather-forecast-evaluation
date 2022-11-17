@@ -1,4 +1,4 @@
-# weather-forecast-evaluation
+# Weather Forecast Evaluation
 
 ## Objective
 The aim of the project is to collect weather forecast data along with historical data, store them in different databases (SQL and NoSQL) and compare the results, evaluate the forecasts.
