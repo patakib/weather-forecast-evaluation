@@ -26,8 +26,10 @@ Make sure no duplicates are in the table after each load job.
 ### Forecast
 Create a daily workflow for fetching the forecast from the same API.  
 Necessary information: 
+
 Hourly:  
 - all the above written fields in the case of historical data for the next 3 days from today
+- 
 Daily:
 - weathercode, precipitation sum, snowfall sum, precipitation hours, max temp, min temp, sunrise, sunset for the 4-6 days from today
 
