@@ -7,7 +7,7 @@ terraform {
 }
  
 provider "aws" {
- region = "eu-central-1b"
+ region = "eu-central-1"
 }
  
 resource "aws_instance" "test_instance" {
