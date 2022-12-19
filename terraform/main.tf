@@ -10,10 +10,11 @@ provider "aws" {
  region = "eu-central-1"
 }
  
-resource "aws_instance" "test_instance" {
- ami           = "ami-830c94e3"
- instance_type = "t2.nano"
- tags = {
-   Name = "test_instance"
- }
+resource "aws_ami_copy" "weather_test_instance" {
+  source_ami_id = "ami-0caef02b518350c8b"
+  source_ami_region = "eu-central-1"
+  instance_type = "t2.micro"
+  tags = {
+    Name = "weather_test_instance"
+  }
 }
