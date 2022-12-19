@@ -11,7 +11,7 @@ provider "aws" {
 }
  
 resource "aws_instance" "weather_test_instance" {
-  ami           = "ami-0a6b2839d44d781b2"
+  ami           = "ami-09c5ba4f838d8684a"
   instance_type = "t2.micro"
 
   tags = {
