@@ -1,7 +1,7 @@
 name: "Terraform Infrastructure Change Management Pipeline with GitHub Actions"
  
 on: 
-  workflow_dispatch
+  workflow_dispatch:
 
 env:
  # verbosity setting for Terraform logs
