@@ -18,4 +18,4 @@ jobs:
     steps:
       - name: Destroy Test VM
         id: destroy
-        run: terraform destroy -target aws_instance.weather_test_instance
+        run: terraform destroy -var 'region=eu-central-1' -target aws_instance.weather_test_instance
