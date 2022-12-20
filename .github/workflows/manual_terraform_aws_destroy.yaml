@@ -16,10 +16,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show Destroy Plan
-        run: terraform plan -destroy
-        continue-on-error: true
-
       - name: Destroy Test VM
         id: destroy
-        run: terraform destroy -auto-approve -target aws_instance.weather_test_instance
+        run: terraform destroy -target aws_instance.weather_test_instance
