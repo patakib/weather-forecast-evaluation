@@ -1,4 +1,4 @@
-name: "Terraform Infrastructure Change Management Pipeline with GitHub Actions"
+name: "Create Test Environment on AWS"
  
 on: 
   workflow_dispatch:
@@ -17,7 +17,6 @@ jobs:
    defaults:
      run:
        shell: bash
-       # We keep Terraform files in the terraform directory.
        working-directory: ./terraform
  
    steps:
