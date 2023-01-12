@@ -3,10 +3,14 @@ package com.none.weather.forecast.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.none.weather.forecast.documents.Daily;
+import com.none.weather.forecast.documents.ExpandedMetrics;
 import com.none.weather.forecast.documents.Hourly;
 import com.none.weather.forecast.documents.Location;
 import com.none.weather.forecast.documents.Metrics;
-import com.none.weather.forecast.documents.dtos.JsonDto;
+import com.none.weather.forecast.documents.dtos.JsonDtoDaily;
+import com.none.weather.forecast.documents.dtos.JsonDtoHourly;
+import com.none.weather.forecast.repositories.DailyRepository;
 import com.none.weather.forecast.repositories.HourlyRepository;
 import com.none.weather.forecast.repositories.LocationRepositoryMongo;
 import com.none.weather.utils.Url;
@@ -32,18 +36,60 @@ import org.springframework.stereotype.Service;
 public class ForecastServiceImpl implements ForecastService {
 
   private final HourlyRepository hourlyRepository;
+  private final DailyRepository dailyRepository;
   private final LocationRepositoryMongo locationRepository;
   private final Utils utils = new Utils();
 
   @Autowired
   public ForecastServiceImpl(HourlyRepository hourlyRepository,
+                             DailyRepository dailyRepository,
                              LocationRepositoryMongo locationRepository) {
     this.hourlyRepository = hourlyRepository;
+    this.dailyRepository = dailyRepository;
     this.locationRepository = locationRepository;
   }
 
   @Override
   public void updateDaily() {
+    List<Location> locations = locationRepository.findAll();
+    ObjectMapper mapper = new ObjectMapper();
+    locations.stream().forEach(location -> {
+      try {
+        JsonNode incoming = sendRequest(location, 'd').findPath("daily");
+        JsonDtoDaily jsonDtoDaily = mapper.readValue(incoming.toString(),JsonDtoDaily.class);
+        writeDaily(jsonDtoDaily, Optional.ofNullable(location));
+        System.out.println("sdfgsdgs");
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    });
+  }
+
+  private void writeDaily(JsonDtoDaily jsonDtoDaily, Optional<Location> location) {
+    Timestamp requestDate = Timestamp.from(Instant.now());
+    Location loc = location.orElse(null);
+    Stream.of(jsonDtoDaily.getTimes())
+        .forEach(time -> {
+          int i = ArrayUtils.indexOf(jsonDtoDaily.getTimes(), time);
+
+            dailyRepository.save(
+                new Daily.Builder()
+                    .withId(null)
+                    .withRequestDate(utils.addDaysForRequest(requestDate, 0))
+                    .withTargetDate(jsonDtoDaily.getTimes()[i])
+                    .withMetrics( new ExpandedMetrics.Builder()
+                        .withWeatherCode(jsonDtoDaily.getWeatherCode()[i])
+                        .withTempMax(jsonDtoDaily.getTempMax()[i])
+                        .withTempMin(jsonDtoDaily.getTempMin()[i])
+                        .withSunrise(jsonDtoDaily.getSunrise()[i])
+                        .withSunset(jsonDtoDaily.getSunset()[i])
+                        .withPrecipSum(jsonDtoDaily.getPrecipSum()[i])
+                        .withSnowSum(jsonDtoDaily.getSnowSum()[i])
+                        .withPrecipHours(jsonDtoDaily.getPrecipHours()[i])
+                        .build())
+                    .withLocation(loc.getId())
+                    .build());
+            });
   }
 
   @Override
@@ -54,38 +100,48 @@ public class ForecastServiceImpl implements ForecastService {
     ObjectMapper mapper = new ObjectMapper();
     locations.stream().forEach(location -> {
       try {
-        JsonNode incoming = sendRequest(location).findPath("hourly");
-        JsonDto jsonDto = mapper.readValue(incoming.toString(), JsonDto.class);
-        writeHourly(jsonDto, Optional.ofNullable(location));
+        JsonNode incoming = sendRequest(location, 'h').findPath("hourly");
+        JsonDtoHourly jsonDtoHourly = mapper.readValue(incoming.toString(), JsonDtoHourly.class);
+        writeHourly(jsonDtoHourly, Optional.ofNullable(location));
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
     });
   }
 
-
-  public URL urlBuilder(Location location) {
+  public URL UrlBuilder(Location location, Character type) {
     return Optional.ofNullable(location).filter(l -> l.getLatitude() != null
         && l.getLongitude() != null).map(l -> {
       try {
         Url url = new Url("https://api.open-meteo.com/v1/forecast?");
+        if (type.equals('h')) {
+          return url
+              .addParam("latitude", String.valueOf(l.getLatitude()))
+              .addParam("longitude", String.valueOf(l.getLongitude()))
+              .addParam("start_date", utils.addDaysForRequest(Timestamp.from(Instant.now()), 1))
+              .addParam("end_date", utils.addDaysForRequest(Timestamp.from(Instant.now()), 3))
+              .addParam("timezone", "Europe%2FBerlin")
+              .addParam("hourly", "temperature_2m,relativehumidity_2m,precipitation,snowfall,"
+                  + "cloudcover,windspeed_10m,winddirection_10m")
+              .build();
+        } else if (type.equals('d')) {
         return url
             .addParam("latitude", String.valueOf(l.getLatitude()))
             .addParam("longitude", String.valueOf(l.getLongitude()))
-            .addParam("start_date", utils.addDaysForRequest(Timestamp.from(Instant.now()), 1))
-            .addParam("end_date", utils.addDaysForRequest(Timestamp.from(Instant.now()), 3))
+            .addParam("start_date", utils.addDaysForRequest(Timestamp.from(Instant.now()), 4))
+            .addParam("end_date", utils.addDaysForRequest(Timestamp.from(Instant.now()), 6))
             .addParam("timezone", "Europe%2FBerlin")
-            .addParam("hourly", "temperature_2m,relativehumidity_2m,precipitation,snowfall,"
-                + "cloudcover,windspeed_10m,winddirection_10m")
+            .addParam("daily", "weathercode,temperature_2m_max,temperature_2m_min,sunrise," +
+                "sunset,precipitation_sum,snowfall_sum,precipitation_hours")
             .build();
+        } else throw new IllegalArgumentException("Type argument invalid");
       } catch (MalformedURLException e) {
         throw new RuntimeException(e);
       }
     }).orElseThrow(() -> new IllegalArgumentException("Location data missing"));
   }
 
-
-  private List<Hourly> buildHourlies(JsonDto jsonDto, Location loc) {
+  private List<Hourly> buildHourlies(JsonDtoHourly jsonDtoHourly, Location loc) {
     List<Hourly> hourlies = new ArrayList<>();
     Timestamp requestDate = Timestamp.from(Instant.now());
     List<Metrics> day1Metrics = new ArrayList<>();
@@ -93,10 +149,10 @@ public class ForecastServiceImpl implements ForecastService {
     List<Metrics> day3Metrics = new ArrayList<>();
 
 
-    Stream.of(jsonDto.getTimes())
+    Stream.of(jsonDtoHourly.getTimes())
         .forEach(time -> {
-          int i = ArrayUtils.indexOf(jsonDto.getTimes(), time);
-          Metrics metrics = createMetrics(jsonDto, i);
+          int i = ArrayUtils.indexOf(jsonDtoHourly.getTimes(), time);
+          Metrics metrics = createMetrics(jsonDtoHourly, i);
 
           LocalDate date = LocalDateTime.parse(time).toLocalDate();
           LocalDate startDate = requestDate.toLocalDateTime().toLocalDate();
@@ -114,34 +170,34 @@ public class ForecastServiceImpl implements ForecastService {
         .withRequestDate(utils.addDaysForRequest(requestDate, 0))
         .withTargetDate(utils.addDaysForRequest(requestDate, 1))
         .withMetrics(day1Metrics)
-        .withLocation(loc)
+        .withLocationId(loc.getId())
         .build());
     hourlies.add(new Hourly.Builder()
         .withId(null)
         .withRequestDate(utils.addDaysForRequest(requestDate, 0))
         .withTargetDate(utils.addDaysForRequest(requestDate, 2))
         .withMetrics(day2Metrics)
-        .withLocation(loc)
+        .withLocationId(loc.getId())
         .build());
     hourlies.add(new Hourly.Builder()
         .withId(null)
         .withRequestDate(utils.addDaysForRequest(requestDate, 0))
         .withTargetDate(utils.addDaysForRequest(requestDate, 3))
         .withMetrics(day3Metrics)
-        .withLocation(loc)
+        .withLocationId(loc.getId())
         .build());
     return hourlies;
   }
 
-  private Metrics createMetrics(JsonDto jsonDto, int i) {
-    String timestamp = jsonDto.getTimes()[i];
-    Double temp = jsonDto.getTemps()[i];
-    Double humid = jsonDto.getHumids()[i];
-    Double precip = jsonDto.getPrecips()[i];
-    Double snow = jsonDto.getSnows()[i];
-    Double cloud = jsonDto.getClouds()[i];
-    Double windSpeed = jsonDto.getWinds()[i];
-    Double windDir = jsonDto.getDirections()[i];
+  private Metrics createMetrics(JsonDtoHourly jsonDtoHourly, int i) {
+    String timestamp = jsonDtoHourly.getTimes()[i];
+    Double temp = jsonDtoHourly.getTemps()[i];
+    Double humid = jsonDtoHourly.getHumids()[i];
+    Double precip = jsonDtoHourly.getPrecips()[i];
+    Double snow = jsonDtoHourly.getSnows()[i];
+    Double cloud = jsonDtoHourly.getClouds()[i];
+    Double windSpeed = jsonDtoHourly.getWinds()[i];
+    Double windDir = jsonDtoHourly.getDirections()[i];
 
     return new Metrics.Builder()
         .withTime(timestamp)
@@ -162,16 +218,22 @@ public class ForecastServiceImpl implements ForecastService {
     });
   }
 
-  private JsonNode sendRequest(Location location) throws IOException {
-    var url = urlBuilder(location);
-    var jsonNode = get(url);
-    return jsonNode;
+  private JsonNode sendRequest(Location location, Character type) throws IOException {
+    if (type.equals('h')) {
+      URL url = UrlBuilder(location,'h');
+      var jsonNode = get(url);
+      return jsonNode;
+    } else if (type.equals('d')) {
+      URL url = UrlBuilder(location,'d');
+      var jsonNode = get(url);
+      return jsonNode;
+    } else throw new IllegalArgumentException("Type argument invalid");
   }
 
-  private void writeHourly(JsonDto jsonDto, Optional<Location> location) {
+  private void writeHourly(JsonDtoHourly jsonDtoHourly, Optional<Location> location) {
 
     Location loc = location.orElse(null);
-    List<Hourly> hourlies = buildHourlies(jsonDto, loc);
+    List<Hourly> hourlies = buildHourlies(jsonDtoHourly, loc);
 
     for (Hourly h : hourlies
     ) {

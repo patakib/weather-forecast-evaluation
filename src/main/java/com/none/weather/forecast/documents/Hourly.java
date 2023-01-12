@@ -20,12 +20,10 @@ public class Hourly {
   private String requestDate;
   private String targetDate;
   private List<Metrics> metrics;
-  //TODO: change type to ObjectID
-  @DBRef
-  private Location location;
+  private ObjectId location;
 
   public Hourly() {
-    this.metrics=new ArrayList<>();
+    this.metrics = new ArrayList<>();
   }
 
   @Getter
@@ -35,7 +33,7 @@ public class Hourly {
     private String requestDate;
     private String targetDate;
     private List<Metrics> metrics;
-    private Location location;
+    private ObjectId location;
 
     public Builder withId(String id) {
       this.id = id;
@@ -58,8 +56,8 @@ public class Hourly {
       return this;
     }
 
-    public Builder withLocation(Location location) {
-      this.location = location;
+    public Builder withLocationId(String location) {
+      this.location = new ObjectId(location);
       return this;
     }
 

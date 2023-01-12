@@ -11,69 +11,71 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ExpandedMetrics {
 
-  private String time;
-  private Double temp;
-  private Double humid;
-  private Double precip;
-  private Double snow;
-  private Double cloud;
-  private Double windSpeed;
-  private Double windDir;
+  private Integer weatherCode;
+  private Double tempMax;
+  private Double tempMin;
+  private String sunrise;
+  private String sunset;
+  private Double precipSum;
+  private Double snowSum;
+  private Double precipHours;
 
   @Getter
   @Setter
   public static class Builder {
-    private String time;
-    private Double temp;
-    private Double humid;
-    private Double precip;
-    private Double snow;
-    private Double cloud;
-    private Double windSpeed;
-    private Double windDir;
+    private Integer weatherCode;
+    private Double tempMax;
+    private Double tempMin;
+    private String sunrise;
+    private String sunset;
+    private Double precipSum;
+    private Double snowSum;
+    private Double precipHours;
 
-    public Builder withTime(String time) {
-      this.time = time;
+
+    public Builder withWeatherCode(Integer weatherCode) {
+      this.weatherCode = weatherCode;
       return this;
     }
 
-    public Builder withTemp(Double temp) {
-      this.temp = temp;
+    public Builder withTempMax(Double tempMax) {
+      this.tempMax = tempMax;
       return this;
     }
 
-    public Builder withHumid(Double humid) {
-      this.humid = humid;
+    public Builder withTempMin(Double tempMin) {
+      this.tempMin = tempMin;
       return this;
     }
 
-    public Builder withPrecip(Double precip) {
-      this.precip = precip;
+    public Builder withSunrise(String sunrise) {
+      this.sunrise = sunrise;
       return this;
     }
 
-    public Builder withSnow(Double snow) {
-      this.snow = snow;
+    public Builder withSunset(String sunset) {
+      this.sunset = sunset;
       return this;
     }
 
-    public Builder withCloud(Double cloud) {
-      this.cloud = cloud;
+    public Builder withPrecipSum(Double precipSum) {
+      this.precipSum = precipSum;
       return this;
     }
 
-    public Builder withWindSpeed(Double windSpeed) {
-      this.windSpeed = windSpeed;
+    public Builder withSnowSum(Double snowSum) {
+      this.snowSum = snowSum;
       return this;
     }
 
-    public Builder withWindDir(Double windDir) {
-      this.windDir = windDir;
+    public Builder withPrecipHours(Double precipHours) {
+      this.precipHours = precipHours;
       return this;
     }
 
     public ExpandedMetrics build() {
-      return new ExpandedMetrics(time, temp, humid, precip, snow, cloud, windSpeed, windDir);
+      return new ExpandedMetrics(weatherCode, tempMax, tempMin, sunrise, sunset,
+          precipSum, snowSum, precipHours);
     }
   }
 }
