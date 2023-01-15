@@ -18,3 +18,9 @@ resource "aws_instance" "weather_test_instance" {
     Name = "weather_test_instance"
   }
 }
+
+provisioner "remote-exec" {
+  inline = [
+    "sudo apt install python3"
+  ]
+}
