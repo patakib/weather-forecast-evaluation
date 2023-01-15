@@ -17,10 +17,10 @@ resource "aws_instance" "weather_test_instance" {
   tags = {
     Name = "weather_test_instance"
   }
-}
-
-provisioner "remote-exec" {
+ 
+ provisioner "remote-exec" {
   inline = [
     "sudo apt install python3"
   ]
+ }
 }
