@@ -7,7 +7,7 @@ terraform {
 }
  
 provider "aws" {
- region = "eu-central-1"
+ region = "eu-west-1"
 }
  
 resource "aws_instance" "weather_test_instance" {
@@ -17,10 +17,4 @@ resource "aws_instance" "weather_test_instance" {
   tags = {
     Name = "weather_test_instance"
   }
- 
- provisioner "remote-exec" {
-  inline = [
-    "sudo apt install python3"
-  ]
- }
 }
